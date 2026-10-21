@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Overview - Smart Face Detection & Recognition{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4 align-items-center">
+  <div class="col-md-7">
+    <h1 class="display-6 fw-bold mb-1 brand-font text-white">System Dashboard</h1>
+    <p class="text-muted mb-0">Real-time facial detection, deep feature encoding, and biometric identification hub.</p>
+  </div>
+  <div class="col-md-5 d-flex justify-content-md-end gap-2">
+    <a href="{{ url_for('register_page') }}" class="btn-modern-primary" id="btnQuickRegister">
+      <i class="bi bi-person-plus-fill"></i> Register New Face
+    </a>
+    <a href="{{ url_for('recognize_page') }}" class="btn-modern-success" id="btnQuickRecognize">
+      <i class="bi bi-camera-video-fill"></i> Open Live Camera
+    </a>
+  </div>
+</div>
+
+<!-- Metrics Overview Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <div class="glass-card card-glow-cyan h-100">
+      <div class="stat-widget">
+        <div class="stat-icon cyan">
+          <i class="bi bi-people-fill"></i>
+        </div>
+        <div>
+          <div class="stat-value" id="statTotalRegistered">{{ stats.total_registered }}</div>
+          <div class="stat-label">Total Registered People</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="glass-card card-glow-green h-100">
+      <div class="stat-widget">
+        <div class="stat-icon green">
+          <i class="bi bi-person-check-fill"></i>
+        </div>
+        <div>
+          <div class="stat-value" id="statRecognizedEvents">{{ stats.total_recognized_events }}</div>
+          <div class="stat-label">Face Recognitions</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="glass-card card-glow-yellow h-100">
+      <div class="stat-widget">
+        <div class="stat-icon yellow">
+          <i class="bi bi-question-circle-fill"></i>
+        </div>
+        <div>
+          <div class="stat-value" id="statUnknownEvents">{{ stats.total_unknown_events }}</div>
+          <div class="stat-label">Unknown Encounters</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="glass-card h-100">
+      <div class="stat-widget">
+        <div class="stat-icon indigo">
+          <i class="bi bi-calendar-event-fill"></i>
+        </div>
+        <div>
+          <div class="stat-value" id="statRegisteredToday">{{ stats.registered_today }}</div>
+          <div class="stat-label">Registered Today</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Row: Workflow & Activity Feed -->
+<div class="row g-4 mb-4">
+  <!-- Left Column: Step-by-Step Workflow & Engine Specs -->
+  <div class="col-lg-7">
+    <div class="glass-card mb-4">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h4 class="mb-0 text-white brand-font">
+          <i class="bi bi-lightning-charge text-cyan me-2"></i>Application Workflow
+        </h4>
+        <span class="badge-recognized">Ready to Operate</span>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="p-3 rounded-3" style="background: rgba(11, 17, 32, 0.6); border: 1px solid var(--border-subtle);">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span class="badge rounded-circle bg-primary text-white" style="width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center;">1</span>
+              <strong class="text-white">Register Face</strong>
+            </div>
+            <p class="small text-muted mb-2">Enter person's name (e.g. Kishore), capture single face via webcam or photo, and generate 128D biometric vector.</p>
+            <a href="{{ url_for('register_page') }}" class="btn-modern-secondary btn-sm">
+              <i class="bi bi-arrow-right-circle"></i> Go to Registration
+            </a>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="p-3 rounded-3" style="background: rgba(11, 17, 32, 0.6); border: 1px solid var(--border-subtle);">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span class="badge rounded-circle bg-success text-white" style="width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center;">2</span>
+              <strong class="text-white">Live Recognition</strong>
+            </div>
+            <p class="small text-muted mb-2">Continuous webcam tracking. Shows <span class="text-success fw-bold">GREEN box</span> with registered name, or <span class="text-warning fw-bold">YELLOW box</span> for Unknown.</p>
+            <a href="{{ url_for('recognize_page') }}" class="btn-modern-secondary btn-sm">
+              <i class="bi bi-camera-video"></i> Start Live Feed
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Engine Architecture Specs -->
+      <div class="border-top border-secondary border-opacity-25 pt-3 mt-3">
+        <div class="row g-2 text-muted small">
+          <div class="col-sm-6">
+            <i class="bi bi-cpu text-cyan me-1"></i> <strong>Face Detection:</strong> OpenCV YuNet (Ultra-fast ONNX)
+          </div>
+          <div class="col-sm-6">
+            <i class="bi bi-diagram-3 text-cyan me-1"></i> <strong>Recognition:</strong> OpenCV SFace (128-d Embedding)
+          </div>
+          <div class="col-sm-6">
+            <i class="bi bi-database text-cyan me-1"></i> <strong>Storage:</strong> SQLite with WAL Mode
+          </div>
+          <div class="col-sm-6">
+            <i class="bi bi-shield-check text-success me-1"></i> <strong>Privacy:</strong> 100% On-Device / Zero Cloud
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recently Registered Faces -->
+    <div class="glass-card">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h4 class="mb-0 text-white brand-font">
+          <i class="bi bi-people text-cyan me-2"></i>Recently Registered
+        </h4>
+        <a href="{{ url_for('people_page') }}" class="btn-modern-secondary btn-sm">View All</a>
+      </div>
+
+      {% if stats.recent_people %}
+      <div class="row g-3">
+        {% for p in stats.recent_people %}
+        <div class="col-sm-6 col-md-4">
+          <div class="p-3 rounded-3 text-center" style="background: rgba(11, 17, 32, 0.6); border: 1px solid var(--border-subtle);">
+            <img src="{{ p.thumbnail_path }}" alt="{{ p.name }}" class="person-thumbnail-lg mb-2"
+                 onerror="this.src='https://ui-avatars.com/api/?name={{ p.name | urlencode }}&background=0b1120&color=38bdf8';">
+            <h6 class="mb-1 text-white text-truncate" title="{{ p.name }}">{{ p.name }}</h6>
+            <span class="badge-uid" style="font-size: 0.72rem;">{{ p.uid }}</span>
+            <div class="text-muted mt-2" style="font-size: 0.75rem;">
+              <i class="bi bi-clock me-1"></i>{{ p.created_at[:10] }}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-center py-4 text-muted">
+        <i class="bi bi-person-x fs-1 mb-2 d-block"></i>
+        <p class="mb-2">No people registered yet.</p>
+        <a href="{{ url_for('register_page') }}" class="btn-modern-primary btn-sm">Register First Face</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Right Column: Recognition Events History -->
+  <div class="col-lg-5">
+    <div class="glass-card h-100 d-flex flex-column">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h4 class="mb-0 text-white brand-font">
+          <i class="bi bi-activity text-cyan me-2"></i>Recognition Activity Log
+        </h4>
+        <span class="text-muted small">Live Feed</span>
+      </div>
+
+      <div style="flex: 1; overflow-y: auto;">
+        {% if stats.recent_logs %}
+        <ul class="activity-feed-list">
+          {% for log in stats.recent_logs %}
+          <li class="activity-item">
+            <div class="d-flex align-items-center gap-3">
+              {% if log.status == 'recognized' %}
+              <div class="stat-icon green" style="width: 36px; height: 36px; font-size: 1.1rem;">
+                <i class="bi bi-person-check-fill"></i>
+              </div>
+              {% else %}
+              <div class="stat-icon yellow" style="width: 36px; height: 36px; font-size: 1.1rem;">
+                <i class="bi bi-person-exclamation"></i>
+              </div>
+              {% endif %}
+              <div>
+                <div class="fw-bold text-white">{{ log.detected_name }}</div>
+                <div class="text-muted" style="font-size: 0.75rem;">{{ log.timestamp | replace('T', ' ') | truncate(19, True, '') }}</div>
+              </div>
+            </div>
+            <div>
+              {% if log.status == 'recognized' %}
+              <span class="badge-recognized">{{ (log.confidence * 100) | round(0) | int }}% Match</span>
+              {% else %}
+              <span class="badge-unknown">Unknown</span>
+              {% endif %}
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+          <i class="bi bi-camera-reels fs-1 mb-2 d-block"></i>
+          <p class="mb-0">No recognition events logged yet.</p>
+          <small>Events will stream here automatically during live camera feeds.</small>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Privacy & Security Assurance Banner -->
+<div class="glass-card">
+  <div class="row align-items-center g-3">
+    <div class="col-md-1 text-center">
+      <div class="stat-icon green mx-auto" style="width: 48px; height: 48px; font-size: 1.5rem;">
+        <i class="bi bi-shield-check"></i>
+      </div>
+    </div>
+    <div class="col-md-9">
+      <h5 class="mb-1 text-white">Privacy & Biometric Data Notice</h5>
+      <p class="text-muted small mb-0">
+        All facial representations are processed strictly on your computer and persistently stored in your private local SQLite database. No images or biometric vectors are ever transmitted across external cloud APIs or public URLs. Users have full control to view and permanently delete registered profiles at any time.
+      </p>
+    </div>
+    <div class="col-md-2 text-md-end">
+      <a href="{{ url_for('settings_page') }}" class="btn-modern-secondary btn-sm w-100">Security Details</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

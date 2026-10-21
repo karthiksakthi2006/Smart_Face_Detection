@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Settings & Diagnostics - Smart Face Detection & Recognition{% endblock %}
+
+{% block content %}
+<div class="row g-4 justify-content-center">
+  <div class="col-xl-10">
+    <div class="mb-4">
+      <h1 class="display-6 fw-bold mb-1 brand-font text-white">
+        <i class="bi bi-sliders text-cyan me-2"></i>Settings & Diagnostics
+      </h1>
+      <p class="text-muted mb-0">Tune facial recognition models, review privacy controls, and inspect system telemetry.</p>
+    </div>
+
+    <div class="row g-4">
+      <!-- Left Column: Settings Configuration -->
+      <div class="col-lg-7">
+        <div class="glass-card mb-4">
+          <h4 class="text-white brand-font mb-3">
+            <i class="bi bi-gear text-cyan me-2"></i>Recognition Engine Parameters
+          </h4>
+
+          <form id="settingsForm">
+            <!-- Similarity Threshold -->
+            <div class="mb-4">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label for="settingSimilarity" class="form-label text-white small fw-bold mb-0">
+                  Cosine Similarity Threshold
+                </label>
+                <span id="similarityDisplay" class="badge-recognized">
+                  {{ settings.similarity_threshold.value }}
+                </span>
+              </div>
+              <input type="range" class="form-range" id="settingSimilarity" name="similarity_threshold"
+                     min="0.30" max="0.55" step="0.01" value="{{ settings.similarity_threshold.value }}">
+              <div class="form-text text-muted" style="font-size: 0.76rem;">
+                Determines when a detected face is recognized as a registered person. Recommended: 0.38 (OpenCV baseline is 0.363). Higher values require closer similarity; lower values are more forgiving.
+              </div>
+            </div>
+
+            <!-- Detection Confidence -->
+            <div class="mb-4">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label for="settingConfidence" class="form-label text-white small fw-bold mb-0">
+                  YuNet Detection Minimum Confidence
+                </label>
+                <span id="confidenceDisplay" class="badge-recognized">
+                  {{ settings.detection_confidence.value }}
+                </span>
+              </div>
+              <input type="range" class="form-range" id="settingConfidence" name="detection_confidence"
+                     min="0.40" max="0.85" step="0.05" value="{{ settings.detection_confidence.value }}">
+              <div class="form-text text-muted" style="font-size: 0.76rem;">
+                Filters out faint or false face detections. Recommended: 0.60.
+              </div>
+            </div>
+
+            <!-- Prevent Duplicate Faces Toggle -->
+            <div class="mb-4 p-3 rounded-3" style="background: rgba(11, 17, 32, 0.6); border: 1px solid var(--border-subtle);">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="settingDuplicate" name="prevent_duplicate_faces"
+                       {% if settings.prevent_duplicate_faces.value == 'true' %}checked{% endif %}>
+                <label class="form-check-label text-white small fw-bold" for="settingDuplicate">
+                  Enforce Biometric Uniqueness
+                </label>
+              </div>
+              <div class="form-text text-muted mt-1" style="font-size: 0.76rem;">
+                When enabled, prevents registering a person if their facial feature matches an already registered profile above threshold.
+              </div>
+            </div>
+
+            <div class="text-end">
+              <button type="submit" class="btn-modern-primary" id="btnSaveSettings">
+                <i class="bi bi-save"></i> Save Configuration
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Privacy & Security Controls -->
+        <div class="glass-card">
+          <h4 class="text-white brand-font mb-3">
+            <i class="bi bi-shield-lock text-cyan me-2"></i>Privacy & Biometric Storage
+          </h4>
+          <p class="text-muted small">
+            Biometric encodings are generated via deep neural embeddings and stored strictly inside local SQLite database (<code>faces.db</code>).
+          </p>
+
+          <div class="p-3 rounded-3 mb-3" style="background: rgba(11, 17, 32, 0.6); border: 1px solid var(--border-subtle);">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <strong class="text-white d-block small">Database File Location</strong>
+                <code class="text-cyan small">{{ db_path }}</code>
+              </div>
+              <span class="badge-recognized">Active WAL</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: System Diagnostics & Model Information -->
+      <div class="col-lg-5">
+        <div class="glass-card mb-4">
+          <h4 class="text-white brand-font mb-3">
+            <i class="bi bi-cpu text-cyan me-2"></i>AI Engine Telemetry
+          </h4>
+
+          <ul class="list-unstyled mb-0 d-flex flex-column gap-3 small">
+            <li class="p-2 rounded-2" style="background: rgba(11, 17, 32, 0.5); border: 1px solid var(--border-subtle);">
+              <div class="d-flex justify-content-between mb-1">
+                <strong class="text-white">Face Detector (YuNet):</strong>
+                <span class="badge-recognized">Loaded</span>
+              </div>
+              <div class="text-muted" style="font-size: 0.72rem;">Model: face_detection_yunet.onnx (232 KB)</div>
+            </li>
+
+            <li class="p-2 rounded-2" style="background: rgba(11, 17, 32, 0.5); border: 1px solid var(--border-subtle);">
+              <div class="d-flex justify-content-between mb-1">
+                <strong class="text-white">Face Recognizer (SFace):</strong>
+                <span class="badge-recognized">Loaded</span>
+              </div>
+              <div class="text-muted" style="font-size: 0.72rem;">Model: face_recognition_sface.onnx (38.6 MB, 128D)</div>
+            </li>
+
+            <li class="p-2 rounded-2" style="background: rgba(11, 17, 32, 0.5); border: 1px solid var(--border-subtle);">
+              <div class="d-flex justify-content-between mb-1">
+                <strong class="text-white">OpenCV Version:</strong>
+                <span class="text-cyan">{{ cv2_version }}</span>
+              </div>
+            </li>
+
+            <li class="p-2 rounded-2" style="background: rgba(11, 17, 32, 0.5); border: 1px solid var(--border-subtle);">
+              <div class="d-flex justify-content-between mb-1">
+                <strong class="text-white">Flask Server:</strong>
+                <span class="text-cyan">{{ flask_version }}</span>
+              </div>
+            </li>
+
+            <li class="p-2 rounded-2" style="background: rgba(11, 17, 32, 0.5); border: 1px solid var(--border-subtle);">
+              <div class="d-flex justify-content-between mb-1">
+                <strong class="text-white">Python Environment:</strong>
+                <span class="text-cyan">{{ python_version }}</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const simInput = document.getElementById('settingSimilarity');
+  const simDisplay = document.getElementById('similarityDisplay');
+  const confInput = document.getElementById('settingConfidence');
+  const confDisplay = document.getElementById('confidenceDisplay');
+  const form = document.getElementById('settingsForm');
+
+  if (simInput && simDisplay) {
+    simInput.addEventListener('input', (e) => {
+      simDisplay.textContent = parseFloat(e.target.value).toFixed(2);
+    });
+  }
+
+  if (confInput && confDisplay) {
+    confInput.addEventListener('input', (e) => {
+      confDisplay.textContent = parseFloat(e.target.value).toFixed(2);
+    });
+  }
+
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btnSaveSettings');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+
+      const payload = {
+        similarity_threshold: simInput.value,
+        detection_confidence: confInput.value,
+        prevent_duplicate_faces: document.getElementById('settingDuplicate').checked ? 'true' : 'false'
+      };
+
+      try {
+        const res = await fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          App.showToast('Settings saved successfully.', 'success');
+        } else {
+          App.showToast('Could not save settings.', 'error');
+        }
+      } catch (err) {
+        App.showToast('Network error saving settings.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-save"></i> Save Configuration';
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

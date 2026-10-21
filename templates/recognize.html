@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Live Face Recognition - Smart Face Detection & Recognition{% endblock %}
+
+{% block content %}
+<div class="row g-4 justify-content-center">
+  <div class="col-xl-11">
+    <!-- Header Controls -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+      <div>
+        <h1 class="display-6 fw-bold mb-1 brand-font text-white">
+          <i class="bi bi-camera-video text-cyan me-2"></i>Live Face Recognition
+        </h1>
+        <p class="text-muted mb-0">Continuous real-time webcam facial detection and identification against SQLite records.</p>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+        <a href="{{ url_for('register_page') }}" class="btn-modern-secondary btn-sm">
+          <i class="bi bi-person-plus"></i> Register New Face
+        </a>
+      </div>
+    </div>
+
+    <!-- Main Live Recognition Stage -->
+    <div class="row g-4">
+      <!-- Left Column: Video Viewport + Overlay Canvas + Controls -->
+      <div class="col-lg-8">
+        <div class="glass-card mb-3">
+          <!-- Top Viewport Control Bar -->
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <div class="d-flex align-items-center gap-2">
+              <span id="liveStatusBadge" class="hud-corner-badge" style="position: static;">
+                <i class="bi bi-camera-video me-1"></i> Camera Inactive
+              </span>
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+              <!-- Mirror Toggle -->
+              <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" id="liveMirrorToggle" checked>
+                <label class="form-check-label small text-muted" for="liveMirrorToggle">Mirror Feed</label>
+              </div>
+
+              <!-- Sound Chime Toggle -->
+              <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" id="soundToggle" checked>
+                <label class="form-check-label small text-muted" for="soundToggle">
+                  <i class="bi bi-volume-up"></i> Chime
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Video Stage Viewport -->
+          <div class="webcam-viewport-wrapper position-relative">
+            <video id="recognizeVideo" playsinline autoplay muted></video>
+            <canvas id="recognizeOverlayCanvas" class="webcam-overlay-canvas"></canvas>
+
+            <!-- Real-time HUD Corner Badges -->
+            <div class="hud-corner-badge hud-top-right">
+              <i class="bi bi-speedometer2 text-cyan"></i>
+              <span id="hudFps">0 FPS</span>
+            </div>
+
+            <div class="hud-corner-badge hud-bottom-left">
+              <i class="bi bi-bounding-box text-cyan"></i>
+              <span id="hudActiveFaces">0 Faces</span>
+            </div>
+
+            <div class="hud-corner-badge hud-bottom-right">
+              <span class="badge-recognized">
+                <i class="bi bi-person-check-fill"></i>
+                <span id="hudRecognizedCount">0</span> Recognized
+              </span>
+            </div>
+
+            <!-- Inactive Camera Placeholder -->
+            <div id="recognizePlaceholder" class="webcam-placeholder">
+              <div class="webcam-placeholder-icon">
+                <i class="bi bi-camera-video"></i>
+              </div>
+              <div>
+                <h5 class="text-white mb-1">Live Feed Paused</h5>
+                <p class="small text-muted mb-3">Click 'Start Camera' below to initiate real-time facial recognition.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Camera Action Buttons -->
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-3">
+            <div class="d-flex gap-2">
+              <button type="button" id="startLiveCameraBtn" class="btn-modern-primary px-4">
+                <i class="bi bi-play-fill fs-5"></i> Start Camera
+              </button>
+              <button type="button" id="stopLiveCameraBtn" class="btn-modern-secondary px-4" disabled>
+                <i class="bi bi-stop-fill fs-5"></i> Stop Camera
+              </button>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+              <label for="cameraSelect" class="small text-muted mb-0"><i class="bi bi-webcam"></i></label>
+              <select id="cameraSelect" class="form-select form-select-sm bg-dark text-white border-secondary" style="max-width: 220px;">
+                <option value="">Default Camera</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visual Legend Bar -->
+        <div class="glass-card py-3">
+          <div class="d-flex flex-wrap justify-content-around align-items-center gap-3 small">
+            <div class="d-flex align-items-center gap-2">
+              <span style="width: 14px; height: 14px; border: 2px solid #10b981; background: rgba(16, 185, 129, 0.2); border-radius: 3px; display: inline-block;"></span>
+              <strong class="text-white">GREEN Box:</strong>
+              <span class="text-muted">Registered Person &bull; Correct Name Displayed &bull; "Recognized"</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <span style="width: 14px; height: 14px; border: 2px solid #f59e0b; background: rgba(245, 158, 11, 0.2); border-radius: 3px; display: inline-block;"></span>
+              <strong class="text-white">YELLOW Box:</strong>
+              <span class="text-muted">Unregistered Face &bull; "Unknown Person" Displayed</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Recognition Parameters & Real-Time Feed -->
+      <div class="col-lg-4">
+        <!-- Live Recognition Activity Feed -->
+        <div class="glass-card mb-4" style="min-height: 280px;">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h5 class="mb-0 text-white brand-font">
+              <i class="bi bi-broadcast text-cyan me-2"></i>Live Detections
+            </h5>
+            <span class="badge-recognized" style="font-size: 0.72rem;">Streaming</span>
+          </div>
+
+          <div id="recentDetectionsFeed" class="activity-feed-list" style="max-height: 240px;">
+            <div class="text-center py-4 text-muted small">
+              <i class="bi bi-radar fs-2 mb-2 d-block text-cyan"></i>
+              Waiting for faces in live camera stream...
+            </div>
+          </div>
+        </div>
+
+        <!-- Recognition Tuning Parameters -->
+        <div class="glass-card">
+          <h5 class="mb-3 text-white brand-font">
+            <i class="bi bi-sliders text-cyan me-2"></i>Recognition Sensitivity
+          </h5>
+
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label for="thresholdSlider" class="small text-muted">Cosine Match Threshold:</label>
+              <span id="thresholdVal" class="badge-recognized">0.38</span>
+            </div>
+            <input type="range" class="form-range" id="thresholdSlider" min="0.30" max="0.55" step="0.01" value="0.38">
+            <div class="d-flex justify-content-between text-muted" style="font-size: 0.72rem;">
+              <span>More Lenient (0.30)</span>
+              <span>Balanced (0.38)</span>
+              <span>Strict (0.55)</span>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-3" style="background: rgba(11, 17, 32, 0.6); border: 1px solid var(--border-subtle);">
+            <div class="small text-muted">
+              <strong class="text-white"><i class="bi bi-shield-check text-cyan"></i> Real-time Multi-Face:</strong>
+              Multiple individuals in the camera frame are detected and tracked independently. Registered individuals receive their registered identity, while others remain marked as Unknown.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/recognize.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Registered People - Smart Face Detection & Recognition{% endblock %}
+
+{% block content %}
+<div class="row g-4 justify-content-center">
+  <div class="col-xl-11">
+    <!-- Header with Search & View Toggle -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+      <div>
+        <div class="d-flex align-items-center gap-3">
+          <h1 class="display-6 fw-bold mb-0 brand-font text-white">Registered People</h1>
+          <span id="totalPeopleBadge" class="badge-recognized">Loading...</span>
+        </div>
+        <p class="text-muted mb-0">Browse, search, inspect, and manage stored facial identities.</p>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+        <a href="{{ url_for('register_page') }}" class="btn-modern-primary btn-sm">
+          <i class="bi bi-person-plus-fill"></i> Register New Face
+        </a>
+      </div>
+    </div>
+
+    <!-- Filter & Toolbar Bar -->
+    <div class="glass-card mb-4 p-3">
+      <div class="row g-3 align-items-center">
+        <!-- Search Input -->
+        <div class="col-md-6 col-lg-5">
+          <div class="input-group">
+            <span class="input-group-text bg-dark border-secondary text-muted">
+              <i class="bi bi-search"></i>
+            </span>
+            <input type="text" id="peopleSearchInput" class="form-control bg-dark border-secondary text-white" placeholder="Search by name or UID..." autocomplete="off">
+          </div>
+        </div>
+
+        <!-- View Mode Switcher -->
+        <div class="col-md-6 col-lg-7 d-flex justify-content-md-end gap-2">
+          <div class="btn-group" role="group" aria-label="View toggle">
+            <button type="button" class="btn btn-sm btn-outline-secondary active text-white" id="viewGridBtn" title="Grid Card View">
+              <i class="bi bi-grid-fill"></i> Cards
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary text-white" id="viewTableBtn" title="Detailed Table View">
+              <i class="bi bi-table"></i> Table
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grid View Container -->
+    <div id="peopleGridContainer" class="row g-3 mb-4">
+      <!-- Dynamically filled by people.js -->
+    </div>
+
+    <!-- Table View Container -->
+    <div id="peopleTableContainer" class="glass-card p-3 mb-4" style="display: none;">
+      <div class="table-responsive">
+        <table class="table-custom">
+          <thead>
+            <tr>
+              <th>Person</th>
+              <th>Registration Date</th>
+              <th>Total Recognitions</th>
+              <th>Last Seen</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="peopleTableBody">
+            <!-- Dynamically populated by people.js -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Empty State Message -->
+    <div id="peopleEmptyState" class="glass-card text-center py-5 my-4" style="display: none;">
+      <div class="stat-icon cyan mx-auto mb-3" style="width: 72px; height: 72px; font-size: 2.2rem;">
+        <i class="bi bi-person-x"></i>
+      </div>
+      <h4 class="text-white mb-2">No Registered People Found</h4>
+      <p class="text-muted small mb-3">No profiles matched your search, or database is currently empty.</p>
+      <a href="{{ url_for('register_page') }}" class="btn-modern-primary btn-sm">
+        <i class="bi bi-person-plus-fill"></i> Register A New Face
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Deletion Confirmation Modal -->
+<div class="modal fade modal-custom" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title d-flex align-items-center gap-2 text-white" id="deleteModalLabel">
+          <i class="bi bi-exclamation-triangle-fill text-danger"></i> Confirm Permanent Deletion
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body py-4">
+        <p class="text-white mb-2">
+          Are you sure you want to permanently delete <strong id="deletePersonName" class="text-danger"></strong>?
+        </p>
+        <div class="mb-3">
+          <span class="badge-uid" id="deletePersonUid"></span>
+        </div>
+        <div class="p-3 rounded-3" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25);">
+          <small class="text-danger d-block">
+            <i class="bi bi-shield-x me-1"></i> <strong>Permanent Biometric Removal:</strong>
+            This will completely remove the person's record, their 128-dimensional facial representation, and delete their saved profile thumbnail from disk. This action cannot be undone.
+          </small>
+        </div>
+      </div>
+      <div class="modal-footer justify-content-between">
+        <button type="button" class="btn-modern-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" id="confirmDeleteBtn" class="btn-modern-danger btn-sm">
+          <i class="bi bi-trash3 me-1"></i> Delete Person Permanently
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/people.js') }}"></script>
+{% endblock %}

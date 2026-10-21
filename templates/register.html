@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}Register New Face - Smart Face Detection & Recognition{% endblock %}
+
+{% block content %}
+<div class="row g-4 justify-content-center">
+  <div class="col-xl-11">
+    <!-- Page Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+      <div>
+        <h1 class="display-6 fw-bold mb-1 brand-font text-white">
+          <i class="bi bi-person-plus text-cyan me-2"></i>Register New Face
+        </h1>
+        <p class="text-muted mb-0">Capture a face via your webcam, extract 128D facial feature vector, and register in database.</p>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('people_page') }}" class="btn-modern-secondary btn-sm">
+          <i class="bi bi-people"></i> View Registered People
+        </a>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- Left Column: Camera Viewport / Photo Upload Stage -->
+      <div class="col-lg-7">
+        <div class="glass-card">
+          <!-- Viewport Header Controls -->
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex align-items-center gap-2">
+              <span id="registerStatusBadge" class="hud-corner-badge" style="position: static;">
+                <i class="bi bi-camera-video me-1"></i> Camera Inactive
+              </span>
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+              <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" id="mirrorToggle" checked>
+                <label class="form-check-label small text-muted" for="mirrorToggle">Mirror Camera</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabs for Webcam vs Photo Upload -->
+          <ul class="nav nav-pills mb-3 gap-2" id="registerTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active btn-sm" id="tab-webcam" data-bs-toggle="pill" data-bs-target="#pane-webcam" type="button" role="tab" style="background: rgba(56, 189, 248, 0.1); color: var(--accent-cyan); border: 1px solid rgba(56, 189, 248, 0.25);">
+                <i class="bi bi-camera-video me-1"></i> Live Webcam
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link btn-sm text-muted" id="tab-upload" data-bs-toggle="pill" data-bs-target="#pane-upload" type="button" role="tab" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-subtle);">
+                <i class="bi bi-upload me-1"></i> Upload Portrait Photo
+              </button>
+            </li>
+          </ul>
+
+          <div class="tab-content" id="registerTabsContent">
+            <!-- Tab 1: Live Webcam Stage -->
+            <div class="tab-pane fade show active" id="pane-webcam" role="tabpanel">
+              <div class="webcam-viewport-wrapper">
+                <video id="registerVideo" playsinline autoplay muted></video>
+                <canvas id="registerOverlayCanvas" class="webcam-overlay-canvas"></canvas>
+
+                <!-- Inactive Camera Overlay Placeholder -->
+                <div id="webcamPlaceholder" class="webcam-placeholder">
+                  <div class="webcam-placeholder-icon">
+                    <i class="bi bi-camera"></i>
+                  </div>
+                  <div>
+                    <h5 class="text-white mb-1">Webcam is Inactive</h5>
+                    <p class="small text-muted mb-3">Click 'Start Camera' below to grant browser permission and preview feed.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Camera Bottom Action Bar -->
+              <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mt-3">
+                <div class="d-flex gap-2">
+                  <button type="button" id="startCameraBtn" class="btn-modern-primary">
+                    <i class="bi bi-camera-video"></i> Start Camera
+                  </button>
+                  <button type="button" id="switchCameraBtn" class="btn-modern-secondary" title="Switch Camera device">
+                    <i class="bi bi-arrow-repeat"></i>
+                  </button>
+                </div>
+
+                <button type="button" id="captureFaceBtn" class="btn-modern-success px-4" disabled>
+                  <span id="registerSpinner" class="spinner-border spinner-border-sm me-1" style="display: none;"></span>
+                  <i class="bi bi-camera-fill"></i> Capture Face
+                </button>
+              </div>
+            </div>
+
+            <!-- Tab 2: Photo Upload Stage -->
+            <div class="tab-pane fade" id="pane-upload" role="tabpanel">
+              <div id="dropZone" class="p-5 text-center rounded-3 border-2 border-dashed" style="background: rgba(11, 17, 32, 0.5); border: 2px dashed var(--border-subtle); cursor: pointer;">
+                <i class="bi bi-cloud-arrow-up fs-1 text-cyan mb-2 d-block"></i>
+                <h5 class="text-white mb-1">Drag and drop face portrait here</h5>
+                <p class="text-muted small mb-3">or browse from your local drive (JPEG or PNG format)</p>
+                <input type="file" id="photoUploadInput" accept="image/jpeg,image/png,image/webp" style="display: none;">
+                <button type="button" class="btn-modern-secondary btn-sm" onclick="document.getElementById('photoUploadInput').click();">
+                  <i class="bi bi-folder2-open"></i> Browse Files
+                </button>
+                <div class="mt-3">
+                  <img id="uploadPreview" src="" alt="Upload Preview" style="max-height: 200px; display: none; margin: 0 auto; border-radius: 8px; border: 2px solid var(--accent-cyan);">
+                </div>
+              </div>
+
+              <div class="text-end mt-3">
+                <button type="button" id="submitUploadBtn" class="btn-modern-success" disabled>
+                  <i class="bi bi-check2-circle"></i> Register From Uploaded Photo
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Registration Details & Validation Criteria -->
+      <div class="col-lg-5">
+        <div class="glass-card mb-4">
+          <h4 class="text-white brand-font mb-3">
+            <i class="bi bi-person-lines-fill text-cyan me-2"></i>Profile Details
+          </h4>
+
+          <div class="modern-input-group">
+            <label class="modern-input-label" for="personName">
+              Person's Full Name <span class="text-danger">*</span>
+            </label>
+            <input type="text" id="personName" class="modern-input-control" placeholder="e.g. Kishore" required autocomplete="off">
+            <div class="form-text text-muted" style="font-size: 0.78rem;">
+              This name will be displayed in real-time above the green box when recognized.
+            </div>
+          </div>
+
+          <div class="modern-input-group">
+            <label class="modern-input-label" for="personNotes">
+              Notes or Department (Optional)
+            </label>
+            <input type="text" id="personNotes" class="modern-input-control" placeholder="e.g. Engineering, Visitor, Admin">
+          </div>
+
+          <!-- Privacy & Consent Checkbox -->
+          <div class="p-3 rounded-3 mb-4" style="background: rgba(11, 17, 32, 0.7); border: 1px solid var(--border-subtle);">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="consentCheck" checked>
+              <label class="form-check-label text-muted small" for="consentCheck">
+                <strong class="text-white">Consent Confirmation:</strong> I confirm that this individual has consented to registering their face for biometric recognition and storing facial embeddings locally in the private system database.
+              </label>
+            </div>
+          </div>
+
+          <!-- Validation Checklist Guide -->
+          <div class="p-3 rounded-3" style="background: rgba(11, 17, 32, 0.5); border: 1px solid var(--border-subtle);">
+            <div class="fw-bold small text-white mb-2">
+              <i class="bi bi-info-circle text-cyan me-1"></i> Registration Quality Rules:
+            </div>
+            <ul class="text-muted small ps-3 mb-0" style="line-height: 1.6;">
+              <li><strong>Single Face Rule:</strong> Exactly one face must be visible in frame. If zero faces or multiple people appear, registration will require re-capturing.</li>
+              <li><strong>Lighting & Angle:</strong> Look directly at the webcam under good, even lighting for best feature extraction.</li>
+              <li><strong>Duplicate Prevention:</strong> The system automatically prevents duplicate name registrations and flags duplicate faces.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Registration Success Modal -->
+<div class="modal fade modal-custom" id="registerSuccessModal" tabindex="-1" aria-labelledby="registerSuccessLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title d-flex align-items-center gap-2 text-white" id="registerSuccessLabel">
+          <i class="bi bi-check-circle-fill text-success"></i> Face Registered Successfully!
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center py-4">
+        <div class="position-relative d-inline-block mb-3">
+          <img id="successThumbnail" src="" alt="Thumbnail" class="person-thumbnail-lg" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--recognized-green); box-shadow: var(--shadow-glow-green);">
+          <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-success p-2">
+            <i class="bi bi-check-lg text-white"></i>
+          </span>
+        </div>
+
+        <h4 id="successName" class="text-white mb-1"></h4>
+        <div class="mb-3">
+          <span id="successUid" class="badge-uid"></span>
+        </div>
+
+        <p class="text-muted small mb-0">
+          Facial features have been encoded into a 128-dimensional representation and stored in SQLite. This person will now be recognized automatically in the live camera feed with a green box.
+        </p>
+
+        <div class="text-muted small mt-2" id="successDate"></div>
+      </div>
+      <div class="modal-footer justify-content-between">
+        <button type="button" class="btn-modern-secondary btn-sm" data-bs-dismiss="modal">
+          <i class="bi bi-plus-circle"></i> Register Another
+        </button>
+        <a href="{{ url_for('recognize_page') }}" class="btn-modern-success btn-sm">
+          <i class="bi bi-camera-video-fill"></i> Test in Live Recognition
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/register.js') }}"></script>
+{% endblock %}

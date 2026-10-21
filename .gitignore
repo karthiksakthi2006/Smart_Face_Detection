@@ -1,0 +1,29 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+
+# Virtual Environments
+venv/
+env/
+.venv/
+ENV/
+
+# Local instance database & temporary biometric uploads
+instance/*.db
+instance/*.db-journal
+instance/*.db-wal
+instance/*.db-shm
+!instance/.gitkeep
+
+static/uploads/thumbnails/*
+!static/uploads/thumbnails/.gitkeep
+
+# IDE and OS generated files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
